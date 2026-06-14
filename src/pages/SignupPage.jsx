@@ -1,7 +1,7 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useState } from "react";
 import AuthLayout from "../components/AuthLayout";
-import { useAuth, getDashboardPath } from "../context/AuthContext";
+import { useAuth, getPostAuthRedirect } from "../context/AuthContext";
 
 const DEPARTMENTS = [
   "Computer Science",
@@ -22,6 +22,7 @@ const ROLES = [
 
 export default function SignupPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { signup } = useAuth();
   const [form, setForm] = useState({
     fullName: "",
@@ -53,7 +54,7 @@ export default function SignupPage() {
 
     const result = signup(form);
     if (result.ok) {
-      navigate(getDashboardPath(result.role), { replace: true });
+      navigate(getPostAuthRedirect(location), { replace: true });
     }
   }
 
@@ -65,7 +66,11 @@ export default function SignupPage() {
         <>
           <p className="text-center text-sm text-on-surface-variant">
             Already have an account?{" "}
-            <Link to="/login" className="font-semibold text-primary hover:underline">
+            <Link
+              to="/login"
+              state={location.state}
+              className="font-semibold text-primary hover:underline"
+            >
               Login
             </Link>
           </p>

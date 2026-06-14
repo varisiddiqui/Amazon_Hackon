@@ -1,8 +1,7 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import Header from "./Header";
 import { useAuth } from "../context/AuthContext";
-import DashboardMenuDrawer from "./dashboard/DashboardMenuDrawer";
 import DashboardHome from "./dashboard/DashboardHome";
 import AIAssistantPage from "./ai/AIAssistantPage";
 import TimetablePage from "./timetable/TimetablePage";
@@ -10,6 +9,10 @@ import HostelPage from "./hostel/HostelPage";
 import TransportPage from "./transport/TransportPage";
 import PlacementHubPage from "./placement/PlacementHubPage";
 import SettingsPage from "./settings/SettingsPage";
+import NotificationsPage from "./notifications/NotificationsPage";
+import EventsPage from "./events/EventsPage";
+import { loadRegistrations, saveRegistrations } from "../data/eventsData";
+import { useStudentNav } from "../context/StudentNavContext";
 
 const THEME = {
   bg: "#ffffff",
@@ -48,8 +51,8 @@ const SECTION_TITLES = {
   classes: "Timetable",
   assignments: "Assignments",
   attendance: "Attendance",
-  events: "Events",
-  notices: "Notifications",
+  events: "Campus Event Hub",
+  notices: "Student Alert Center",
   placement: "Placement Hub",
   hostel: "Hostel",
   transport: "Transport",
@@ -302,38 +305,118 @@ function ComingSoon({ title, icon }) {
   );
 }
 
+const VALID_SECTIONS = new Set([
+  "home",
+  "ai",
+  "classes",
+  "assignments",
+  "attendance",
+  "events",
+  "notices",
+  "placement",
+  "hostel",
+  "transport",
+  "settings",
+]);
+
+function normalizeSection(section) {
+  return VALID_SECTIONS.has(section) ? section : "home";
+}
+
 export default function Home() {
   const { user, logout } = useAuth();
+  const studentNav = useStudentNav();
   const navigate = useNavigate();
-  const [active, setActive] = useState("home");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [active, setActive] = useState(() =>
+    normalizeSection(searchParams.get("section") || "home")
+  );
   const [previousActive, setPreviousActive] = useState("home");
-  const [menuOpen, setMenuOpen] = useState(false);
   const [aiInitialPrompt, setAiInitialPrompt] = useState(null);
+  const [eventRegistrations, setEventRegistrations] = useState(loadRegistrations);
+  const applySectionRef = useRef(null);
+
+  const notifications = studentNav?.notifications ?? [];
+  const markNotificationRead = studentNav?.markNotificationRead;
+  const dismissNotification = studentNav?.dismissNotification;
+
+  function registerForEvent(event) {
+    if (eventRegistrations.includes(event.id)) return;
+    const next = [...eventRegistrations, event.id];
+    setEventRegistrations(next);
+    saveRegistrations(next);
+    studentNav?.addNotification({
+      id: Date.now(),
+      userId: "student",
+      title: `Registered: ${event.title}`,
+      message: `You're registered for ${event.title} on ${event.dateLabel} at ${event.time}. Reminder set!`,
+      type: "event",
+      priority: "informational",
+      isRead: false,
+      isImportant: false,
+      isDismissed: false,
+      timeGroup: "today",
+      createdAt: new Date().toISOString(),
+      meta: { eventName: event.title, startsIn: event.dateLabel },
+    });
+  }
+
+  function syncUrl(section) {
+    if (section === "home") {
+      setSearchParams({}, { replace: true });
+    } else {
+      setSearchParams({ section }, { replace: true });
+    }
+  }
 
   function handleLogout() {
     logout();
     navigate("/login");
   }
 
-  function openAI(prompt) {
+  function openAI(prompt, { updateUrl = true } = {}) {
     if (active !== "ai") {
       setPreviousActive(active);
     }
     setAiInitialPrompt(prompt || null);
     setActive("ai");
+    if (updateUrl) syncUrl("ai");
   }
 
-  function handleNavigate(id) {
+  function applySection(id, { updateUrl = true } = {}) {
     if (id === "logout") {
       handleLogout();
       return;
     }
     if (id === "ai") {
-      openAI();
+      openAI(null, { updateUrl });
       return;
     }
     setActive(id);
+    if (updateUrl) syncUrl(id);
   }
+
+  function handleNavigate(id) {
+    applySection(id);
+  }
+
+  applySectionRef.current = applySection;
+
+  useEffect(() => {
+    studentNav?.registerSectionNav((id) => applySectionRef.current?.(id));
+  }, [studentNav]);
+
+  useEffect(() => {
+    studentNav?.setActiveSection(active);
+  }, [active, studentNav]);
+
+  useEffect(() => {
+    const section = normalizeSection(searchParams.get("section") || "home");
+    if (section !== active) {
+      applySection(section, { updateUrl: false });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   function renderContent() {
     if (active === "ai") {
@@ -344,6 +427,7 @@ export default function Home() {
           onBack={() => {
             setActive(previousActive);
             setAiInitialPrompt(null);
+            syncUrl(previousActive);
           }}
         />
       );
@@ -354,11 +438,31 @@ export default function Home() {
           user={user}
           onNavigate={handleNavigate}
           onOpenAI={() => openAI()}
+          notifications={notifications}
         />
       );
     }
     if (active === "classes") {
       return <TimetablePage onOpenAI={openAI} />;
+    }
+    if (active === "notices") {
+      return (
+        <NotificationsPage
+          notifications={notifications}
+          onMarkRead={markNotificationRead}
+          onDismiss={dismissNotification}
+          onNavigate={handleNavigate}
+        />
+      );
+    }
+    if (active === "events") {
+      return (
+        <EventsPage
+          registrations={eventRegistrations}
+          onRegister={registerForEvent}
+          onOpenAI={() => openAI("Any useful events this week?")}
+        />
+      );
     }
     if (SECTIONS[active]) return <SectionView id={active} />;
     if (active === "hostel") return <HostelPage onOpenAI={openAI} />;
@@ -372,18 +476,7 @@ export default function Home() {
 
   return (
     <>
-      <Header
-        showMenuButton
-        onMenuToggle={() => setMenuOpen((o) => !o)}
-      />
-
-      <DashboardMenuDrawer
-        open={menuOpen}
-        onClose={() => setMenuOpen(false)}
-        active={active}
-        onNavigate={handleNavigate}
-        onLogout={handleLogout}
-      />
+      <Header activeSection={active} onSectionNav={handleNavigate} />
 
       <div className="flex h-screen w-full overflow-hidden bg-white pt-[72px]">
         <main

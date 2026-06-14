@@ -22,6 +22,25 @@ export function getDashboardPath(role) {
   }
 }
 
+/** After login/signup: home page by default, or return to the page user tried to open. */
+export function getPostAuthRedirect(location) {
+  const from = location?.state?.from;
+  if (from?.pathname && !["/login", "/signup"].includes(from.pathname)) {
+    return `${from.pathname}${from.search ?? ""}${from.hash ?? ""}`;
+  }
+
+  const next = new URLSearchParams(location?.search ?? "").get("next");
+  if (next && next.startsWith("/") && !next.startsWith("//")) {
+    return next;
+  }
+
+  return "/";
+}
+
+export function loginRedirectState(targetPath, search = "") {
+  return { from: { pathname: targetPath, search } };
+}
+
 function loadStoredUser() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);

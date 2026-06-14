@@ -1,4 +1,7 @@
-export default function DashboardHome({ user, onNavigate, onOpenAI }) {
+import { getRecentNotifications, NOTIFICATION_TYPES } from "../../data/notificationsData";
+import { getDashboardEvents, FEATURED_EVENT_ALERT } from "../../data/eventsData";
+
+export default function DashboardHome({ user, onNavigate, onOpenAI, notifications = [] }) {
   const firstName = user?.fullName?.split(" ")[0] || "Student";
   const hour = new Date().getHours();
   const greeting =
@@ -32,17 +35,8 @@ export default function DashboardHome({ user, onNavigate, onOpenAI }) {
     { name: "Web Dev Project", due: "Due in 5 Days", urgency: "green" },
   ];
 
-  const events = [
-    { name: "Amazon HackOn", when: "Tomorrow" },
-    { name: "AI Workshop", when: "Friday" },
-    { name: "Coding Contest", when: "Sunday" },
-  ];
-
-  const notices = [
-    "Exam Form Released",
-    "Fee Deadline Extended",
-    "Holiday Announcement",
-  ];
+  const dashboardEvents = getDashboardEvents(2);
+  const recentNotifications = getRecentNotifications(notifications, 3);
 
   const reminders = [
     { color: "bg-red-500", text: "Assignment due tomorrow" },
@@ -88,7 +82,19 @@ export default function DashboardHome({ user, onNavigate, onOpenAI }) {
               </li>
             ))}
           </ul>
-          <div className="mt-5 rounded-xl border border-indigo-100 bg-white/80 p-4">
+          <div className="mt-5 rounded-xl border border-amber-200 bg-amber-50/80 p-4">
+            <p className="text-xs font-bold uppercase tracking-wider text-amber-700">
+              🎉 Event Alert
+            </p>
+            <p className="mt-1 text-sm font-semibold text-on-background">
+              {FEATURED_EVENT_ALERT.title}
+            </p>
+            <p className="mt-1 text-xs text-on-surface-variant">
+              <span className="font-semibold text-amber-700">Recommended:</span>{" "}
+              {FEATURED_EVENT_ALERT.recommendation}
+            </p>
+          </div>
+          <div className="mt-4 rounded-xl border border-indigo-100 bg-white/80 p-4">
             <p className="text-xs font-bold uppercase tracking-wider text-indigo-600">
               Recommended Action
             </p>
@@ -206,29 +212,31 @@ export default function DashboardHome({ user, onNavigate, onOpenAI }) {
           </div>
         </section>
 
-        {/* Section 6: Events */}
+        {/* Section 6: Upcoming Events */}
         <section className="rounded-2xl border border-black/5 bg-white p-5 shadow-sm">
-          <h3 className="mb-4 text-sm font-bold text-on-background">
-            Upcoming Events
-          </h3>
+          <div className="mb-4 flex items-center justify-between">
+            <h3 className="text-sm font-bold text-on-background">🎉 Upcoming Events</h3>
+            <button
+              type="button"
+              onClick={() => onNavigate("events")}
+              className="text-xs font-semibold text-indigo-600 hover:underline"
+            >
+              View All
+            </button>
+          </div>
           <div className="flex flex-col gap-2">
-            {events.map((ev) => (
+            {dashboardEvents.map((ev) => (
               <div
-                key={ev.name}
+                key={ev.id}
                 className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3"
               >
                 <div>
-                  <p className="text-sm font-semibold text-on-background">
-                    {ev.name}
-                  </p>
-                  <p className="text-xs text-on-surface-variant">{ev.when}</p>
+                  <p className="text-sm font-semibold text-on-background">{ev.name}</p>
+                  <p className="text-xs text-on-surface-variant">{ev.dateLabel}</p>
                 </div>
-                <button
-                  type="button"
-                  className="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-indigo-700"
-                >
-                  Register
-                </button>
+                <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-bold text-amber-700">
+                  {ev.when}
+                </span>
               </div>
             ))}
           </div>
@@ -265,24 +273,37 @@ export default function DashboardHome({ user, onNavigate, onOpenAI }) {
       </section>
 
       <div className="grid gap-6 lg:grid-cols-3">
-        {/* Section 8: Notice Board */}
+        {/* Section 8: Recent Notifications */}
         <section className="rounded-2xl border border-black/5 bg-white p-5 shadow-sm lg:col-span-2">
-          <h3 className="mb-4 text-sm font-bold text-on-background">
-            Recent Notices
-          </h3>
+          <div className="mb-4 flex items-center justify-between">
+            <h3 className="text-sm font-bold text-on-background">
+              🔔 Recent Notifications
+            </h3>
+            <button
+              type="button"
+              onClick={() => onNavigate("notices")}
+              className="text-xs font-semibold text-indigo-600 hover:underline"
+            >
+              View All
+            </button>
+          </div>
           <ul className="flex flex-col gap-2">
-            {notices.map((n) => (
+            {recentNotifications.map((n) => (
               <li
-                key={n}
-                className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3 text-sm text-on-background"
+                key={n.id}
+                className={`flex items-center justify-between rounded-xl px-4 py-3 text-sm ${
+                  !n.isRead ? "border border-indigo-100 bg-indigo-50/50" : "bg-slate-50"
+                }`}
               >
-                {n}
-                <button
-                  type="button"
-                  className="text-xs font-semibold text-indigo-600 hover:underline"
-                >
-                  Summarize
-                </button>
+                <div className="flex items-center gap-2">
+                  {!n.isRead && (
+                    <span className="h-2 w-2 shrink-0 rounded-full bg-indigo-600" />
+                  )}
+                  <span className="font-medium text-on-background">{n.title}</span>
+                </div>
+                <span className="text-[10px] text-on-surface-variant">
+                  {NOTIFICATION_TYPES[n.type]?.icon || "🔔"}
+                </span>
               </li>
             ))}
           </ul>

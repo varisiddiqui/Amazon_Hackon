@@ -1,21 +1,27 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import AuthLayout from "../components/AuthLayout";
-import { useAuth, getDashboardPath } from "../context/AuthContext";
+import { useAuth, getPostAuthRedirect } from "../context/AuthContext";
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const { login, loginAsGuest, loginWithGoogle, isSignedIn, user } = useAuth();
+  const location = useLocation();
+  const { login, loginAsGuest, loginWithGoogle, isSignedIn } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  function goAfterAuth() {
+    navigate(getPostAuthRedirect(location), { replace: true });
+  }
+
   useEffect(() => {
     if (isSignedIn) {
-      navigate(getDashboardPath(user?.role), { replace: true });
+      goAfterAuth();
     }
-  }, [isSignedIn, user, navigate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isSignedIn]);
 
   function handleSubmit(e) {
     e.preventDefault();
@@ -24,20 +30,20 @@ export default function LoginPage() {
     const result = login({ email, password });
     setLoading(false);
     if (result.ok) {
-      navigate(getDashboardPath(result.role), { replace: true });
+      goAfterAuth();
     } else {
       setError(result.error);
     }
   }
 
   function handleGuest() {
-    const result = loginAsGuest();
-    navigate(getDashboardPath(result.role), { replace: true });
+    loginAsGuest();
+    goAfterAuth();
   }
 
   function handleGoogle() {
-    const result = loginWithGoogle();
-    navigate(getDashboardPath(result.role), { replace: true });
+    loginWithGoogle();
+    goAfterAuth();
   }
 
   return (
@@ -48,7 +54,11 @@ export default function LoginPage() {
         <>
           <p className="text-center text-sm text-on-surface-variant">
             Don&apos;t have an account?{" "}
-            <Link to="/signup" className="font-semibold text-primary hover:underline">
+            <Link
+              to="/signup"
+              state={location.state}
+              className="font-semibold text-primary hover:underline"
+            >
               Sign Up
             </Link>
           </p>

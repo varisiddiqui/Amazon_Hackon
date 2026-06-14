@@ -1,5 +1,14 @@
 /** Mock student database — powers CampusFlow AI with personalized answers */
 
+import { getUpcomingEvents } from "./eventsData";
+
+export const events = getUpcomingEvents().map((e) => ({
+  name: e.title,
+  when: e.registrationDeadline || e.dateLabel,
+  day: e.dateLabel,
+  type: e.category,
+}));
+
 export const timetable = [
   { time: "09:00", name: "DSA", room: "Room 204 · Block A", status: "completed" },
   { time: "11:00", name: "DBMS", room: "Room 204 · Block A", status: "live" },
@@ -21,13 +30,6 @@ export const attendance = {
   attended: 39,
   classesNeeded: 3,
 };
-
-export const events = [
-  { name: "Amazon HackOn", when: "Tomorrow", day: "Saturday", type: "hackathon" },
-  { name: "AI Workshop", when: "Friday 4:00 PM", day: "Friday", type: "workshop" },
-  { name: "Coding Contest", when: "Sunday", day: "Sunday", type: "contest" },
-  { name: "Resume Building Session", when: "Sunday 2:00 PM", day: "Sunday", type: "career" },
-];
 
 export const notices = [
   {
