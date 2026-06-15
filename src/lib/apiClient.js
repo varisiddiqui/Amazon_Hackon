@@ -1,5 +1,5 @@
 const TOKEN_KEY = "campusflow_token";
-const API_BASE = "/api";
+const API_BASE = import.meta.env.VITE_API_URL || "/api";
 
 export function getToken() {
   return localStorage.getItem(TOKEN_KEY);
@@ -31,7 +31,9 @@ export async function apiFetch(path, options = {}) {
     });
   } catch {
     throw new Error(
-      "Cannot reach backend server. Start it with: cd backend && npm run dev"
+      import.meta.env.PROD
+        ? "Cannot reach API server. Check deployment and environment variables."
+        : "Cannot reach backend server. Start it with: cd backend && npm run dev"
     );
   }
 
@@ -45,7 +47,9 @@ export async function apiFetch(path, options = {}) {
   if (!response.ok) {
     if (response.status === 502 || response.status === 503) {
       throw new Error(
-        "Backend server is not running. Start it with: cd backend && npm run dev"
+        import.meta.env.PROD
+          ? "Server temporarily unavailable. Check MongoDB (MONGO_URI) on Vercel."
+          : "Backend server is not running. Start it with: cd backend && npm run dev"
       );
     }
     throw new Error(body.error || body.message || `Request failed (${response.status})`);
