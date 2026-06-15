@@ -10,6 +10,8 @@ import {
   getSmartReminders,
   getAllNotices,
 } from "../../services/aiService";
+import { getAiStatus } from "../../services/api";
+import { getToken } from "../../lib/apiClient";
 
 const TOOLS = [
   { id: "chat", icon: "💬", label: "CampusGPT" },
@@ -48,6 +50,46 @@ function renderBold(text) {
   );
 }
 
+function GeminiBadge({ meta, compact }) {
+  const isGemini =
+    meta?.poweredBy?.includes("Gemini") || meta?.provider === "google-gemini";
+
+  if (!isGemini) {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600">
+        CampusGPT Local
+      </span>
+    );
+  }
+
+  return (
+    <span
+      className={`inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-blue-50 to-indigo-50 px-2 py-0.5 text-[10px] font-semibold text-indigo-700 ring-1 ring-indigo-100 ${
+        compact ? "" : "mt-2"
+      }`}
+      title={`Model: ${meta?.model || "gemini"} · API: ${meta?.api || "Google Generative AI"}`}
+    >
+      <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path
+          d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z"
+          fill="url(#gemini-gradient)"
+        />
+        <defs>
+          <linearGradient id="gemini-gradient" x1="2" y1="2" x2="22" y2="22">
+            <stop stopColor="#4285F4" />
+            <stop offset="0.5" stopColor="#9B72F2" />
+            <stop offset="1" stopColor="#D96570" />
+          </linearGradient>
+        </defs>
+      </svg>
+      Google Gemini
+      {meta?.model && !compact && (
+        <span className="font-normal text-indigo-500">· {meta.model}</span>
+      )}
+    </span>
+  );
+}
+
 function AIMessageContent({ message }) {
   const {
     text,
@@ -60,6 +102,7 @@ function AIMessageContent({ message }) {
     score,
     strengths,
     improvements,
+    meta,
   } = message;
 
   return (
@@ -182,6 +225,8 @@ function AIMessageContent({ message }) {
           {recommendation}
         </div>
       )}
+
+      {meta && <GeminiBadge meta={meta} />}
     </div>
   );
 }
@@ -210,9 +255,12 @@ function ToolPanel({ tool, onResult, onAsk }) {
 
   async function run(action) {
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 700));
-    onResult(action());
-    setLoading(false);
+    try {
+      const result = await action();
+      onResult(result);
+    } finally {
+      setLoading(false);
+    }
   }
 
   function startVoice() {
@@ -370,6 +418,7 @@ export default function AIAssistantPage({ user, onBack, initialPrompt }) {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [listening, setListening] = useState(false);
+  const [aiStatus, setAiStatus] = useState(null);
   const endRef = useRef(null);
   const recognitionRef = useRef(null);
   const sendRef = useRef(null);
@@ -379,6 +428,15 @@ export default function AIAssistantPage({ user, onBack, initialPrompt }) {
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading, activeTool]);
+
+  useEffect(() => {
+    if (!getToken()) return;
+    getAiStatus()
+      .then(setAiStatus)
+      .catch(() => setAiStatus({ chat: "campusgpt-local", gemini: { configured: false } }));
+  }, []);
+
+  const geminiActive = aiStatus?.gemini?.configured;
 
   const handleSend = useCallback(
     async (question) => {
@@ -460,7 +518,22 @@ export default function AIAssistantPage({ user, onBack, initialPrompt }) {
               <h1 className="truncate text-base font-bold text-on-background sm:text-lg">
                 CampusFlow AI Assistant
               </h1>
-              <p className="text-xs text-emerald-600">● Online · CampusGPT</p>
+              <div className="mt-0.5 flex flex-wrap items-center gap-2">
+                <p className="text-xs text-emerald-600">● Online</p>
+                {geminiActive ? (
+                  <GeminiBadge
+                    meta={{
+                      poweredBy: "Google Gemini",
+                      provider: "google-gemini",
+                      model: aiStatus?.gemini?.model,
+                      api: "Google Generative AI SDK",
+                    }}
+                    compact
+                  />
+                ) : (
+                  <span className="text-xs text-on-surface-variant">CampusGPT (local)</span>
+                )}
+              </div>
             </div>
           </div>
           <div className="hidden shrink-0 items-center gap-2 lg:flex">
@@ -512,6 +585,11 @@ export default function AIAssistantPage({ user, onBack, initialPrompt }) {
                 </h2>
                 <p className="mt-1 text-sm text-on-surface-variant">
                   How can I help you today?
+                  {geminiActive && (
+                    <span className="mt-1 block text-xs text-indigo-600">
+                      Powered by Google Gemini AI
+                    </span>
+                  )}
                 </p>
               </div>
 
@@ -589,10 +667,15 @@ export default function AIAssistantPage({ user, onBack, initialPrompt }) {
                     🤖
                   </div>
                   <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
-                    <div className="flex gap-1">
-                      <span className="h-2 w-2 animate-bounce rounded-full bg-indigo-400" />
-                      <span className="h-2 w-2 animate-bounce rounded-full bg-indigo-400 [animation-delay:150ms]" />
-                      <span className="h-2 w-2 animate-bounce rounded-full bg-indigo-400 [animation-delay:300ms]" />
+                    <div className="flex items-center gap-2">
+                      <div className="flex gap-1">
+                        <span className="h-2 w-2 animate-bounce rounded-full bg-indigo-400" />
+                        <span className="h-2 w-2 animate-bounce rounded-full bg-indigo-400 [animation-delay:150ms]" />
+                        <span className="h-2 w-2 animate-bounce rounded-full bg-indigo-400 [animation-delay:300ms]" />
+                      </div>
+                      <span className="text-xs text-indigo-600">
+                        {geminiActive ? "Google Gemini is thinking..." : "CampusGPT is thinking..."}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -632,7 +715,18 @@ export default function AIAssistantPage({ user, onBack, initialPrompt }) {
           </button>
         </div>
         <p className="mx-auto mt-2 w-full max-w-3xl text-center text-[10px] text-slate-400">
-          Powered by CampusGPT · timetable · assignments · attendance · events
+          {geminiActive ? (
+            <>
+              Powered by{" "}
+              <span className="font-semibold text-indigo-500">Google Gemini API</span>
+              {aiStatus?.gemini?.model && (
+                <span> · {aiStatus.gemini.model}</span>
+              )}
+              {" "}· campus data context
+            </>
+          ) : (
+            <>Powered by CampusGPT (local) · timetable · assignments · attendance · events</>
+          )}
         </p>
       </div>
     </div>

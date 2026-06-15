@@ -1,6 +1,7 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useState } from "react";
 import AuthLayout from "../components/AuthLayout";
+import GoogleSignInButton from "../components/GoogleSignInButton";
 import { useAuth, getPostAuthRedirect } from "../context/AuthContext";
 
 const DEPARTMENTS = [
@@ -23,10 +24,11 @@ const ROLES = [
 export default function SignupPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { signup } = useAuth();
+  const { signup, loginWithGoogle } = useAuth();
   const [form, setForm] = useState({
     fullName: "",
     email: "",
+    confirmEmail: "",
     department: DEPARTMENTS[0],
     year: YEARS[0],
     password: "",
@@ -34,12 +36,14 @@ export default function SignupPage() {
     role: "student",
   });
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   function update(field, value) {
     setForm((f) => ({ ...f, [field]: value }));
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
     setError("");
 
@@ -47,14 +51,38 @@ export default function SignupPage() {
       setError("Passwords do not match.");
       return;
     }
+    if (form.email.trim().toLowerCase() !== form.confirmEmail.trim().toLowerCase()) {
+      setError("Email addresses do not match. Please check for typos.");
+      return;
+    }
     if (form.password.length < 6) {
       setError("Password must be at least 6 characters.");
       return;
     }
 
-    const result = signup(form);
+    setLoading(true);
+    const result = await signup({
+      ...form,
+      email: form.email.trim(),
+      fullName: form.fullName.trim(),
+    });
+    setLoading(false);
     if (result.ok) {
       navigate(getPostAuthRedirect(location), { replace: true });
+    } else {
+      setError(result.error);
+    }
+  }
+
+  async function handleGoogleSignup() {
+    setError("");
+    setGoogleLoading(true);
+    const result = await loginWithGoogle();
+    setGoogleLoading(false);
+    if (result.ok) {
+      navigate(getPostAuthRedirect(location), { replace: true });
+    } else {
+      setError(result.error);
     }
   }
 
@@ -90,6 +118,24 @@ export default function SignupPage() {
           </div>
         )}
 
+        <GoogleSignInButton
+          onClick={handleGoogleSignup}
+          loading={googleLoading}
+          disabled={loading}
+          label="Sign up with Google"
+        />
+
+        <div className="relative py-1">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-black/10" />
+          </div>
+          <div className="relative flex justify-center">
+            <span className="bg-white px-4 text-xs font-medium uppercase tracking-wider text-on-surface-variant">
+              or sign up with email
+            </span>
+          </div>
+        </div>
+
         <div className="w-full">
           <label className="auth-label" htmlFor="signup-name">Full Name</label>
           <input
@@ -110,9 +156,26 @@ export default function SignupPage() {
             id="signup-email"
             type="email"
             required
+            autoComplete="email"
             value={form.email}
             onChange={(e) => update("email", e.target.value)}
             placeholder="you@college.edu"
+            className="auth-input"
+          />
+        </div>
+
+        <div className="w-full">
+          <label className="auth-label" htmlFor="signup-confirm-email">
+            Confirm Email Address
+          </label>
+          <input
+            id="signup-confirm-email"
+            type="email"
+            required
+            autoComplete="off"
+            value={form.confirmEmail}
+            onChange={(e) => update("confirmEmail", e.target.value)}
+            placeholder="Re-enter your email"
             className="auth-input"
           />
         </div>
@@ -200,9 +263,10 @@ export default function SignupPage() {
 
         <button
           type="submit"
-          className="btn-primary mt-2 w-full rounded-xl py-3.5 text-sm font-semibold text-white"
+          disabled={loading || googleLoading}
+          className="btn-primary mt-2 w-full rounded-xl py-3.5 text-sm font-semibold text-white disabled:opacity-60"
         >
-          Create Account
+          {loading ? "Creating account..." : "Create Account"}
         </button>
       </form>
     </AuthLayout>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   todayClasses,
   weeklySchedule,
@@ -12,6 +12,8 @@ import {
   TYPE_COLORS,
   WEEK_DAYS,
 } from "../../data/timetableData";
+import * as api from "../../services/api";
+import { getToken } from "../../lib/apiClient";
 
 function SectionCard({ title, icon, children, className = "" }) {
   return (
@@ -137,18 +139,39 @@ export default function TimetablePage({ onOpenAI }) {
 
   const nextClass = getNextClass();
 
-  function addPersonalEvent(e) {
+  useEffect(() => {
+    if (!getToken()) return;
+    api.fetchTimetable().then((data) => {
+      setPersonalEvents(data.personalEvents);
+    }).catch(() => {});
+  }, []);
+
+  async function addPersonalEvent(e) {
     e.preventDefault();
     if (!newPersonal.title.trim()) return;
+
+    const payload = {
+      title: newPersonal.title,
+      day: newPersonal.day,
+      time: newPersonal.time || "18:00–19:00",
+      icon: "⭐",
+    };
+
+    if (getToken()) {
+      try {
+        const created = await api.addPersonalEvent(payload);
+        setPersonalEvents((prev) => [...prev, created]);
+        setNewPersonal({ title: "", day: "Mon", time: "" });
+        setShowAddPersonal(false);
+        return;
+      } catch {
+        /* fallback */
+      }
+    }
+
     setPersonalEvents((prev) => [
       ...prev,
-      {
-        id: Date.now(),
-        title: newPersonal.title,
-        day: newPersonal.day,
-        time: newPersonal.time || "18:00–19:00",
-        icon: "⭐",
-      },
+      { id: Date.now(), ...payload },
     ]);
     setNewPersonal({ title: "", day: "Mon", time: "" });
     setShowAddPersonal(false);

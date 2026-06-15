@@ -1,4 +1,7 @@
 import { useState, useEffect } from "react";
+import { useAuth } from "../../context/AuthContext";
+import * as api from "../../services/api";
+import { getToken } from "../../lib/apiClient";
 
 const STORAGE_KEY = "campusflow_settings";
 
@@ -68,6 +71,7 @@ function Section({ title, icon, children }) {
 }
 
 export default function SettingsPage({ user, onLogout }) {
+  const { updateUser } = useAuth();
   const [settings, setSettings] = useState(loadSettings);
   const [profile, setProfile] = useState({
     fullName: user?.fullName || "",
@@ -79,7 +83,15 @@ export default function SettingsPage({ user, onLogout }) {
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
+    if (!getToken()) return;
+    api.fetchSettings().then(setSettings).catch(() => {});
+  }, []);
+
+  useEffect(() => {
     saveSettings(settings);
+    if (getToken()) {
+      api.saveSettings(settings).catch(() => {});
+    }
     const root = document.documentElement;
     if (settings.theme === "dark") {
       root.classList.add("dark");
@@ -109,8 +121,16 @@ export default function SettingsPage({ user, onLogout }) {
     setSettings((s) => ({ ...s, theme }));
   }
 
-  function handleSaveProfile(e) {
+  async function handleSaveProfile(e) {
     e.preventDefault();
+    if (getToken()) {
+      await updateUser({
+        fullName: profile.fullName,
+        department: profile.department,
+        year: profile.year,
+        rollNumber: profile.rollNumber,
+      });
+    }
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   }

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   hostelOverview,
   messMenu,
@@ -14,6 +14,8 @@ import {
   summarizeHostelNotices,
   getHostelAIAnswer,
 } from "../../data/hostelData";
+import * as api from "../../services/api";
+import { getToken } from "../../lib/apiClient";
 
 function Section({ title, icon, children }) {
   return (
@@ -47,9 +49,30 @@ export default function HostelPage({ onOpenAI }) {
   const [noticeSummary, setNoticeSummary] = useState(null);
   const [aiReply, setAiReply] = useState(null);
 
-  function submitComplaint(e) {
+  useEffect(() => {
+    if (!getToken()) return;
+    api.fetchHostel().then((data) => {
+      setComplaints(data.complaints);
+      setLeaves(data.leaveRequests);
+    }).catch(() => {});
+  }, []);
+
+  async function submitComplaint(e) {
     e.preventDefault();
     if (!newComplaint.title.trim()) return;
+
+    if (getToken()) {
+      try {
+        const created = await api.submitComplaint(newComplaint);
+        setComplaints((prev) => [created, ...prev]);
+        setNewComplaint({ title: "", category: "Internet" });
+        setShowComplaintForm(false);
+        return;
+      } catch {
+        /* fallback */
+      }
+    }
+
     setComplaints((prev) => [
       {
         id: Date.now(),
@@ -64,9 +87,22 @@ export default function HostelPage({ onOpenAI }) {
     setShowComplaintForm(false);
   }
 
-  function submitLeave(e) {
+  async function submitLeave(e) {
     e.preventDefault();
     if (!newLeave.from || !newLeave.to || !newLeave.reason.trim()) return;
+
+    if (getToken()) {
+      try {
+        const created = await api.submitLeaveRequest(newLeave);
+        setLeaves((prev) => [created, ...prev]);
+        setNewLeave({ from: "", to: "", reason: "" });
+        setShowLeaveForm(false);
+        return;
+      } catch {
+        /* fallback */
+      }
+    }
+
     setLeaves((prev) => [
       {
         id: Date.now(),

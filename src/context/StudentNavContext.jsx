@@ -11,10 +11,9 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "./AuthContext";
 import DashboardMenuDrawer from "../components/dashboard/DashboardMenuDrawer";
 import AIAssistantPage from "../components/ai/AIAssistantPage";
-import {
-  loadNotifications,
-  saveNotifications,
-} from "../data/notificationsData";
+import { loadNotifications } from "../data/notificationsData";
+import * as api from "../services/api";
+import { getToken } from "../lib/apiClient";
 
 const StudentNavContext = createContext(null);
 
@@ -31,28 +30,66 @@ export function StudentNavProvider({ children }) {
   const [notifications, setNotifications] = useState(loadNotifications);
   const sectionNavRef = useRef(null);
 
+  const refreshNotifications = useCallback(async () => {
+    if (!getToken()) return;
+    try {
+      const data = await api.fetchNotifications();
+      setNotifications(data.notifications);
+    } catch {
+      /* keep local fallback */
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isStudent && getToken()) {
+      refreshNotifications();
+    }
+  }, [isStudent, refreshNotifications]);
+
   const registerSectionNav = useCallback((fn) => {
     sectionNavRef.current = fn;
   }, []);
 
-  function updateNotifications(updater) {
-    setNotifications((prev) => {
-      const next = typeof updater === "function" ? updater(prev) : updater;
-      saveNotifications(next);
-      return next;
-    });
-  }
-
-  const markNotificationRead = useCallback((id) => {
-    updateNotifications((prev) =>
+  const markNotificationRead = useCallback(async (id) => {
+    setNotifications((prev) =>
       prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
     );
+    if (getToken()) {
+      try {
+        await api.markNotificationRead(id);
+      } catch {
+        /* optimistic update kept */
+      }
+    }
   }, []);
 
-  const dismissNotification = useCallback((id) => {
-    updateNotifications((prev) =>
+  const dismissNotification = useCallback(async (id) => {
+    setNotifications((prev) =>
       prev.map((n) => (n.id === id ? { ...n, isDismissed: true } : n))
     );
+    if (getToken()) {
+      try {
+        await api.dismissNotification(id);
+      } catch {
+        /* optimistic update kept */
+      }
+    }
+  }, []);
+
+  const addNotification = useCallback(async (notification) => {
+    if (getToken()) {
+      try {
+        const created = await api.createNotification(notification);
+        setNotifications((prev) => [created, ...prev]);
+        return;
+      } catch {
+        /* fall through to local */
+      }
+    }
+    setNotifications((prev) => [
+      { id: Date.now(), ...notification, createdAt: new Date().toISOString() },
+      ...prev,
+    ]);
   }, []);
 
   const toggleMenu = useCallback(() => {
@@ -137,9 +174,8 @@ export function StudentNavProvider({ children }) {
       markNotificationRead,
       dismissNotification,
       viewAllNotifications,
-      addNotification: (notification) => {
-        updateNotifications((prev) => [notification, ...prev]);
-      },
+      refreshNotifications,
+      addNotification,
     }),
     [
       isStudent,
@@ -155,6 +191,8 @@ export function StudentNavProvider({ children }) {
       markNotificationRead,
       dismissNotification,
       viewAllNotifications,
+      refreshNotifications,
+      addNotification,
     ]
   );
 

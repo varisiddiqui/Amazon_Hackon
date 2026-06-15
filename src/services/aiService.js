@@ -7,6 +7,8 @@ import { getStudyRecommendation } from "../data/timetableData";
 import { getHostelAIAnswer } from "../data/hostelData";
 import { getTransportAIAnswer } from "../data/transportData";
 import { getPlacementAIAnswer } from "../data/placementData";
+import { getToken } from "../lib/apiClient";
+import * as api from "./api";
 
 const THINK_MS = 700;
 
@@ -285,7 +287,14 @@ function buildResponse(intent, ctx, question = "") {
   }
 }
 
-export function summarizeNoticeText(text) {
+export async function summarizeNoticeText(text) {
+  if (getToken()) {
+    try {
+      return await api.aiNoticeSummary({ text });
+    } catch {
+      /* fallback */
+    }
+  }
   return {
     type: "summary",
     text: "Notice Summary:",
@@ -299,7 +308,14 @@ export function summarizeNoticeText(text) {
   };
 }
 
-export function analyzeResume() {
+export async function analyzeResume() {
+  if (getToken()) {
+    try {
+      return await api.aiAnalyzeResume();
+    } catch {
+      /* fallback */
+    }
+  }
   return {
     type: "resume",
     text: "Resume Analysis Complete",
@@ -309,24 +325,59 @@ export function analyzeResume() {
   };
 }
 
-export function generateStudyPlan(days = 15) {
+export async function generateStudyPlan(days = 15) {
+  if (getToken()) {
+    try {
+      return await api.aiStudyPlan(days);
+    } catch {
+      /* fallback */
+    }
+  }
   return buildResponse("study_plan", getStudentContext({}));
 }
 
-export function getAttendanceAdvice(action = "skip") {
+export async function getAttendanceAdvice(action = "skip") {
+  if (getToken()) {
+    try {
+      return await api.aiAttendanceAdvice(action);
+    } catch {
+      /* fallback */
+    }
+  }
   return buildResponse(action === "skip" ? "skip_class" : "attendance_needed", getStudentContext({}));
 }
 
-export function getPlacementRoadmap(company = "Amazon") {
+export async function getPlacementRoadmap(company = "Amazon") {
+  if (getToken()) {
+    try {
+      return await api.aiPlacementRoadmap(company);
+    } catch {
+      /* fallback */
+    }
+  }
   if (/amazon/i.test(company)) return buildResponse("amazon_interview", getStudentContext({}));
   return buildResponse("placement_prep", getStudentContext({}));
 }
 
-export function getEventRecommendations() {
+export async function getEventRecommendations() {
+  if (getToken()) {
+    try {
+      return await api.aiEventRecommendations();
+    } catch {
+      /* fallback */
+    }
+  }
   return buildResponse("events", getStudentContext({}));
 }
 
-export function getSmartReminders() {
+export async function getSmartReminders() {
+  if (getToken()) {
+    try {
+      return await api.aiSmartReminders();
+    } catch {
+      /* fallback */
+    }
+  }
   return getStudentContext({}).smartReminders;
 }
 
@@ -339,6 +390,14 @@ export function getAllNotices() {
 }
 
 export async function askAI(question, user) {
+  if (getToken()) {
+    try {
+      return await api.aiChat(question);
+    } catch {
+      /* fallback to local */
+    }
+  }
+
   const ctx = getStudentContext(user);
   const intent = matchIntent(question);
   const response = buildResponse(intent, ctx, question);

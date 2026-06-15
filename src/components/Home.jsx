@@ -13,6 +13,8 @@ import NotificationsPage from "./notifications/NotificationsPage";
 import EventsPage from "./events/EventsPage";
 import { loadRegistrations, saveRegistrations } from "../data/eventsData";
 import { useStudentNav } from "../context/StudentNavContext";
+import * as api from "../services/api";
+import { getToken } from "../lib/apiClient";
 
 const THEME = {
   bg: "#ffffff",
@@ -340,23 +342,49 @@ export default function Home() {
   const markNotificationRead = studentNav?.markNotificationRead;
   const dismissNotification = studentNav?.dismissNotification;
 
+  useEffect(() => {
+    if (!getToken()) return;
+    api.fetchEventRegistrations().then((data) => {
+      setEventRegistrations(data.registrationIds);
+    }).catch(() => {
+      /* keep local fallback */
+    });
+  }, []);
+
   function registerForEvent(event) {
     if (eventRegistrations.includes(event.id)) return;
+
+    if (getToken()) {
+      api.registerForEvent(event.id).then((data) => {
+        setEventRegistrations(data.registrationIds);
+        if (data.notification) {
+          studentNav?.refreshNotifications?.();
+        }
+      }).catch(() => {
+        const next = [...eventRegistrations, event.id];
+        setEventRegistrations(next);
+        saveRegistrations(next);
+        studentNav?.addNotification({
+          title: `Registered: ${event.title}`,
+          message: `You're registered for ${event.title} on ${event.dateLabel} at ${event.time}. Reminder set!`,
+          type: "event",
+          priority: "informational",
+          isImportant: false,
+          meta: { eventName: event.title, startsIn: event.dateLabel },
+        });
+      });
+      return;
+    }
+
     const next = [...eventRegistrations, event.id];
     setEventRegistrations(next);
     saveRegistrations(next);
     studentNav?.addNotification({
-      id: Date.now(),
-      userId: "student",
       title: `Registered: ${event.title}`,
       message: `You're registered for ${event.title} on ${event.dateLabel} at ${event.time}. Reminder set!`,
       type: "event",
       priority: "informational",
-      isRead: false,
       isImportant: false,
-      isDismissed: false,
-      timeGroup: "today",
-      createdAt: new Date().toISOString(),
       meta: { eventName: event.title, startsIn: event.dateLabel },
     });
   }

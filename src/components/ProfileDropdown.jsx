@@ -2,9 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
-const PROFILE_IMAGE =
-  "https://lh3.googleusercontent.com/aida-public/AB6AXuCYptRMxH-gikJBcJ7TgTD-DqfxgY6CNZPunmzJVMVQ9l8ABNmOmxRJsSFfl4uORNoP5IqbgJqDvxcfVQ4woWQEYh8Q7LFmRQ88KINEj62j81r9SHn_NjGHRvbeFJUrBLtXdV-bO70Se_5Baj8e0hpfC0FV2OrqVU2TFOdQ7tStdeKPZv_LNhDB8sdQRChfR7DudtR1mOwtuUnQJPGcirhz0X1-CNIMDoJHfljObbTTCU9j6wrEPIbqjYyGRMiLA00Yhox00MX2OA4";
-
 export default function ProfileDropdown() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -19,8 +16,8 @@ export default function ProfileDropdown() {
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
-  function handleLogout() {
-    logout();
+  async function handleLogout() {
+    await logout();
     setOpen(false);
     navigate("/");
   }
@@ -32,48 +29,69 @@ export default function ProfileDropdown() {
     .slice(0, 2)
     .toUpperCase();
 
+  const avatarSrc = user?.imageUrl;
+
   return (
-    <div className="relative" ref={ref}>
+    <div className="relative flex items-center gap-2" ref={ref}>
+      <span className="hidden max-w-[120px] truncate text-sm font-medium text-on-background lg:inline">
+        {user?.fullName?.split(" ")[0]}
+      </span>
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-label="Profile menu"
         className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border border-black/10 bg-gradient-to-br from-indigo-500 to-purple-600 sm:h-9 sm:w-9"
       >
-        {user?.imageUrl ? (
+        {avatarSrc ? (
           <img
-            src={user.imageUrl}
+            src={avatarSrc}
             alt={user.fullName}
             className="h-full w-full object-cover"
+            referrerPolicy="no-referrer"
           />
         ) : (
-          <img
-            src={PROFILE_IMAGE}
-            alt={user?.fullName || "Profile"}
-            className="h-full w-full object-cover"
-          />
+          <span className="text-xs font-bold text-white">{initials || "ST"}</span>
         )}
       </button>
 
       {open && (
         <div className="absolute right-0 top-full z-50 mt-2 w-56 overflow-hidden rounded-xl border border-black/5 bg-white py-1 shadow-xl">
           <div className="border-b border-black/5 px-4 py-3">
-            <p className="text-sm font-semibold text-on-background">
-              👤 {user?.fullName}
-            </p>
-            <p className="truncate text-xs text-on-surface-variant">
-              {user?.email}
-            </p>
+            <div className="flex items-center gap-3">
+              {avatarSrc ? (
+                <img
+                  src={avatarSrc}
+                  alt={user.fullName}
+                  className="h-10 w-10 rounded-full object-cover"
+                  referrerPolicy="no-referrer"
+                />
+              ) : (
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-600 text-sm font-bold text-white">
+                  {initials}
+                </div>
+              )}
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold text-on-background">
+                  {user?.fullName}
+                </p>
+                <p className="truncate text-xs text-on-surface-variant">{user?.email}</p>
+              </div>
+            </div>
             {user?.isGuest && (
-              <span className="mt-1 inline-block rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
+              <span className="mt-2 inline-block rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
                 Guest Mode
+              </span>
+            )}
+            {user?.authProvider === "google" && (
+              <span className="mt-2 inline-block rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-semibold text-blue-700">
+                Google Account
               </span>
             )}
           </div>
           {[
             { label: "Dashboard", to: "/dashboard", icon: "dashboard" },
-            { label: "My Profile", to: "/dashboard", icon: "person" },
-            { label: "Settings", to: "/dashboard", icon: "settings" },
+            { label: "Events", to: "/dashboard?section=events", icon: "celebration" },
+            { label: "Settings", to: "/dashboard?section=settings", icon: "settings" },
           ].map((item) => (
             <Link
               key={item.label}
@@ -81,9 +99,7 @@ export default function ProfileDropdown() {
               onClick={() => setOpen(false)}
               className="flex items-center gap-3 px-4 py-2.5 text-sm text-on-surface-variant transition-colors hover:bg-indigo-50 hover:text-primary"
             >
-              <span className="material-symbols-outlined text-[18px]">
-                {item.icon}
-              </span>
+              <span className="material-symbols-outlined text-[18px]">{item.icon}</span>
               {item.label}
             </Link>
           ))}
