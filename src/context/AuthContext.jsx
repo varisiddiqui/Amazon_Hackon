@@ -152,7 +152,7 @@ export function AuthProvider({ children }) {
       });
       setToken(token);
       setUser(loggedIn);
-      return { ok: true, role: loggedIn.role };
+      return { ok: true, role: loggedIn?.role || "student" };
     } catch (err) {
       return { ok: false, error: err.message || "Invalid email or password." };
     }
@@ -170,7 +170,7 @@ export function AuthProvider({ children }) {
       });
       setToken(token);
       setUser(created);
-      return { ok: true, role: created.role };
+      return { ok: true, role: created?.role || "student" };
     } catch (err) {
       return { ok: false, error: err.message || "Signup failed." };
     }

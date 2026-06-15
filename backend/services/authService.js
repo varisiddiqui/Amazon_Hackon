@@ -51,11 +51,6 @@ export async function registerUser(payload) {
   }
 
   if (!isDbConnected()) {
-    if (process.env.VERCEL) {
-      const err = new Error("Database unavailable. Set MONGO_URI in Vercel Environment Variables.");
-      err.status = 503;
-      throw err;
-    }
     return memoryAuth.registerUser({ fullName, email, password, department, year, role });
   }
 
@@ -99,11 +94,6 @@ export async function loginUser(payload) {
   }
 
   if (!isDbConnected()) {
-    if (process.env.VERCEL) {
-      const err = new Error("Database unavailable. Set MONGO_URI in Vercel Environment Variables.");
-      err.status = 503;
-      throw err;
-    }
     return memoryAuth.loginUser({ email, password });
   }
 

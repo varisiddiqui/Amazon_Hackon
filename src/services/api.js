@@ -2,28 +2,41 @@ import { apiGet, apiPost, apiPut, apiPatch } from "../lib/apiClient.js";
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
 
+function authError(message) {
+  return new Error(message);
+}
+
+function assertAuthResponse(res, label = "Auth") {
+  if (!res?.user || !res?.token) {
+    throw authError(
+      `${label} failed — wrong backend responded. Restart CampusFlow backend: cd backend && npm run dev (port 5002)`
+    );
+  }
+  return res;
+}
+
 export async function login(credentials) {
-  const res = await apiPost("/auth/login", credentials);
+  const res = assertAuthResponse(await apiPost("/auth/login", credentials), "Login");
   return { user: res.user, token: res.token };
 }
 
 export async function register(data) {
-  const res = await apiPost("/auth/register", data);
+  const res = assertAuthResponse(await apiPost("/auth/register", data), "Signup");
   return { user: res.user, token: res.token };
 }
 
 export async function loginGuest() {
-  const res = await apiPost("/auth/guest");
+  const res = assertAuthResponse(await apiPost("/auth/guest"), "Guest login");
   return { user: res.user, token: res.token };
 }
 
 export async function loginGoogle() {
-  const res = await apiPost("/auth/google");
+  const res = assertAuthResponse(await apiPost("/auth/google"), "Google login");
   return { user: res.user, token: res.token };
 }
 
 export async function loginFirebase(payload) {
-  const res = await apiPost("/auth/firebase", payload);
+  const res = assertAuthResponse(await apiPost("/auth/firebase", payload), "Firebase login");
   return { user: res.user, token: res.token };
 }
 

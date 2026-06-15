@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 let dbConnected = false;
 
-/** Reuse MongoDB connection across Vercel serverless invocations */
+/** Reuse MongoDB connection across hot reloads */
 const globalCache = globalThis;
 
 if (!globalCache.__campusflowMongoose) {
@@ -59,10 +59,6 @@ export async function connectDB() {
 }
 
 async function logWhitelistHint() {
-  if (process.env.VERCEL) {
-    console.warn("→ On Vercel: add MONGO_URI + allow 0.0.0.0/0 in Atlas Network Access");
-    return;
-  }
   try {
     const res = await fetch("https://api.ipify.org?format=text");
     const ip = (await res.text()).trim();

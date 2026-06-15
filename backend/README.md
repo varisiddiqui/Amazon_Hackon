@@ -11,12 +11,12 @@ cp .env.example .env   # add your MONGO_URI
 npm run dev
 ```
 
-Server runs at **http://localhost:5001**
+Server runs at **http://localhost:5002**
 
 ## Environment variables
 
 ```env
-PORT=5001
+PORT=5002
 CLIENT_ORIGIN=http://localhost:5173
 JWT_SECRET=your-secret
 MONGO_URI=mongodb+srv://USER:PASS@cluster.mongodb.net/campusflow?appName=hackathon6
@@ -175,7 +175,7 @@ Frontend currently uses local mock data. When ready to connect, add to `vite.con
 
 ```js
 server: {
-  proxy: { "/api": "http://localhost:5001" }
+  proxy: { "/api": "http://localhost:5002" }
 }
 ```
 

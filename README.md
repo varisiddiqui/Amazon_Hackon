@@ -60,10 +60,11 @@ College students juggle too many disconnected systems — LMS, notices, events, 
 
 | Platform | Role |
 |----------|------|
-| **Vercel** | Frontend (React) + API (`/api/*` serverless) |
 | **MongoDB Atlas** | Cloud database |
 | **Firebase** | Google OAuth |
 | **AWS** | S3 storage + SES email |
+
+Local dev: Vite frontend (`5173`) + Express backend (`5002`).
 
 ---
 
@@ -134,7 +135,7 @@ React Page
 src/services/api.js  ──►  src/lib/apiClient.js  (JWT in header)
     │
     ▼
-/api/*  ──►  Vite proxy (dev)  OR  Vercel serverless (prod)
+/api/*  ──►  Vite proxy (dev) → Express backend :5002
     │
     ▼
 Express Routes  ──►  Services  ──►  MongoDB / Gemini / AWS S3·SES
@@ -190,17 +191,13 @@ amazon/
 │   └── lib/apiClient.js      # Fetch wrapper + JWT
 │
 ├── backend/                  # Backend (Express)
-│   ├── app.js                # Express app (Vercel + local)
-│   ├── server.js             # Local dev server (port 5001)
+│   ├── server.js             # API server entry (port 5002)
 │   ├── routes/               # API route handlers
 │   ├── services/             # auth, ai, gemini, s3, ses
 │   ├── models/               # User, Upload (MongoDB schemas)
 │   ├── config/               # db.js, aws.js
 │   └── data/                 # Seed data for campus modules
 │
-├── api/index.js              # Vercel serverless entry
-├── vercel.json               # Deploy config
-├── DEPLOY.md                 # Full Vercel deploy guide
 └── .env.example              # Frontend env template
 ```
 
@@ -223,7 +220,7 @@ amazon/
 | `POST /api/aws/upload` | S3 file upload |
 | `POST /api/aws/email` | SES email send |
 
-Full API docs: run backend and open `http://localhost:5001/api`
+Full API docs: run backend and open `http://localhost:5002/api`
 
 ---
 
@@ -262,7 +259,7 @@ VITE_FIREBASE_APP_ID=...
 
 **`backend/.env`** (copy from `backend/.env.example`):
 ```env
-PORT=5001
+PORT=5002
 CLIENT_ORIGIN=http://localhost:5173
 JWT_SECRET=your-secret-key
 MONGO_URI=mongodb+srv://USER:PASS@cluster.mongodb.net/campusflow
@@ -288,10 +285,10 @@ npm run dev
 ```
 
 - Frontend: **http://localhost:5173**
-- Backend: **http://localhost:5001**
-- Health check: **http://localhost:5001/api/health**
+- Backend: **http://localhost:5002**
+- Health check: **http://localhost:5002/api/health**
 
-> Vite proxies `/api` → `localhost:5001` automatically.
+> Vite proxies `/api` → `localhost:5002` automatically.
 
 ### 4. Verify database
 
@@ -312,20 +309,6 @@ If MongoDB fails, app uses local file fallback (`backend/data/localUsers.json`) 
 | `demo@campusflow.edu` | `demo1234` | Student |
 | `faculty@campusflow.edu` | `demo1234` | Faculty |
 | `admin@campusflow.edu` | `demo1234` | Admin |
-
----
-
-## Deploy to Vercel
-
-Full step-by-step guide: **[DEPLOY.md](./DEPLOY.md)**
-
-Quick checklist:
-1. Push to GitHub
-2. Import project on [Vercel](https://vercel.com)
-3. Add env vars: `MONGO_URI`, `JWT_SECRET`, `VITE_FIREBASE_*`
-4. MongoDB Atlas → Network Access → **`0.0.0.0/0`**
-5. Firebase → Authorized domains → add `your-app.vercel.app`
-6. Deploy & test: `https://your-app.vercel.app/api/health`
 
 ---
 
