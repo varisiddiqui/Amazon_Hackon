@@ -222,7 +222,7 @@ export async function uploadFile(file, category = "document") {
   formData.append("category", category);
 
   const token = (await import("../lib/apiClient.js")).getToken();
-  const response = await fetch("/api/aws/upload", {
+  const response = await fetch(`${import.meta.env.VITE_API_URL}/api/aws/upload`, {
     method: "POST",
     headers: token ? { Authorization: `Bearer ${token}` } : {},
     body: formData,
@@ -238,7 +238,7 @@ export async function uploadResume(file) {
   formData.append("file", file);
 
   const token = (await import("../lib/apiClient.js")).getToken();
-  const response = await fetch("/api/aws/upload/resume", {
+  const response = await fetch(`${import.meta.env.VITE_API_URL}/api/aws/upload/resume`, {
     method: "POST",
     headers: token ? { Authorization: `Bearer ${token}` } : {},
     body: formData,
@@ -261,7 +261,7 @@ export async function listMyFiles(category) {
 }
 
 export async function deleteFile(id) {
-  const res = await fetch(`/api/aws/files/${id}`, {
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/api/aws/files/${id}`, {
     method: "DELETE",
     headers: {
       Authorization: `Bearer ${(await import("../lib/apiClient.js")).getToken()}`,
