@@ -274,21 +274,32 @@ AWS_S3_BUCKET=campusflow-uploads
 AWS_SES_FROM_EMAIL=noreply@yourdomain.com
 ```
 
-### 3. Run locally
+### 3. Run Locally
 
 ```bash
 # Terminal 1 — Backend
-cd backend && npm run dev
+cd backend
+npm run dev
+```
 
+```bash
 # Terminal 2 — Frontend
 npm run dev
 ```
 
-- Frontend: **https://amazon-hackon-ten.vercel.app/**
-- Backend: **https://amazon-hackon-7wq0.onrender.com**
-- Health check: **https://amazon-hackon-7wq0.onrender.com/health**
+- Frontend (Local): **http://localhost:5173**
+- Backend (Local): **http://localhost:5002**
+- Health Check (Local): **http://localhost:5002/api/health**
 
-> Vite proxies `/api` → `localhost:5002` automatically.
+> Vite automatically proxies `/api` requests to `http://localhost:5002` during development.
+
+---
+
+## 🌐 Live Demo
+
+- **Frontend:** https://amazon-hackon-ten.vercel.app/
+- **Backend API:** https://amazon-hackon-7wq0.onrender.com
+- **Health Check:** https://amazon-hackon-7wq0.onrender.com/health
 
 ### 4. Verify database
 
