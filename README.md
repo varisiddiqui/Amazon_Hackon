@@ -298,8 +298,8 @@ npm run dev
 ## 🌐 Live Demo
 
 - **Frontend:** https://amazon-hackon-ten.vercel.app/
-- **Backend API:** https://amazon-hackon-7wq0.onrender.com
-- **Health Check:** https://amazon-hackon-7wq0.onrender.com/health
+- **Backend API:** https://amazon-hackon-7wq0.onrender.com/api
+- **Health Check:** https://amazon-hackon-7wq0.onrender.com/api/health
 
 ### 4. Verify database
 
