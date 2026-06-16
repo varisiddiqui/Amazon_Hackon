@@ -11,17 +11,17 @@ College students juggle too many disconnected systems — LMS, notices, events, 
 
 **CampusFlow solves this by:**
 
-| Problem | CampusFlow Solution |
-|---------|---------------------|
-| Scattered campus info | Unified student dashboard with all modules in one place |
-| Missed deadlines & notices | Smart notifications + AI daily brief & reminders |
-| Manual event discovery | Campus Event Hub with AI recommendations |
-| Low attendance awareness | Attendance tracker + AI advisor ("Can I skip this class?") |
-| Placement prep overload | Placement Hub with resume analysis, roadmaps, interview prep |
-| No instant campus help | **Google Gemini AI Assistant** — chat, voice, study plans |
-| Slow auth & onboarding | Email/password, Google Sign-In (Firebase), guest demo mode |
-| File & email workflows | **AWS S3** uploads + **SES** email notifications |
-| Data not persisting | **MongoDB Atlas** for users; fallback local store for offline dev |
+| Problem                     | CampusFlow Solution                                               |
+|-----------------------------|---------------------------------------------------------------    |
+| Scattered campus info       | Unified student dashboard with all modules in one place           |
+| Missed deadlines & notices  | Smart notifications + AI daily brief & reminders                  |
+| Manual event discovery      | Campus Event Hub with AI recommendations                          |
+| Low attendance awareness    | Attendance tracker + AI advisor ("Can I skip this class?")        |
+| Placement prep overload     | Placement Hub with resume analysis, roadmaps, interview prep      |
+| No instant campus help      | **Google Gemini AI Assistant** — chat, voice, study plans         |
+| Slow auth & onboarding      | Email/password, Google Sign-In (Firebase), guest demo mode        |
+| File & email workflows      | **AWS S3** uploads + **SES** email notifications                  |
+| Data not persisting         | **MongoDB Atlas** for users; fallback local store for offline dev |
 
 ---
 
@@ -29,40 +29,40 @@ College students juggle too many disconnected systems — LMS, notices, events, 
 
 ### Frontend
 
-| Technology | Use |
-|------------|-----|
-| **React 19** | UI components & pages |
-| **Vite 8** | Dev server & production build |
-| **Tailwind CSS v4** | Styling & responsive layout |
-| **React Router v7** | Client-side routing |
-| **Firebase Auth** | Google Sign-In |
-| **Firestore** | User profile sync (uid, role, photo) |
-| **Framer Motion** | Animations |
-| **Spline** | 3D hero section on landing page |
+| Technology           | Use                                  |
+|----------------------|-------------------------------       |
+| **React 19**         | UI components & pages                |
+| **Vite 8**           | Dev server & production build        |
+| **Tailwind CSS v4**  | Styling & responsive layout          |
+| **React Router v7**  | Client-side routing                  |
+| **Firebase Auth**    | Google Sign-In                       |
+| **Firestore**        | User profile sync (uid, role, photo) |
+| **Framer Motion**    | Animations                           |
+| **Spline**           | 3D hero section on landing page      |
 
 **Key folders:** `src/components/`, `src/pages/`, `src/context/`, `src/services/`, `src/firebase/`
 
 ### Backend
 
-| Technology | Use |
-|------------|-----|
-| **Node.js + Express 5** | REST API server |
-| **MongoDB Atlas + Mongoose** | User auth & persistent storage |
-| **JWT + bcrypt** | Secure login & password hashing |
-| **Google Gemini API** | AI chat & notice summarization |
-| **AWS S3** | Resume, profile & document uploads |
-| **AWS SES** | Event registration & welcome emails |
-| **Multer** | Multipart file handling |
+| Technology                   | Use                                 |
+|------------------------------|-------------------------------------|
+| **Node.js + Express 5**      | REST API server                     |
+| **MongoDB Atlas + Mongoose** | User auth & persistent storage      |
+| **JWT + bcrypt**             | Secure login & password hashing     |
+| **Google Gemini API**        | AI chat & notice summarization      |
+| **AWS S3**                   | Resume, profile & document uploads  |
+| **AWS SES**                  | Event registration & welcome emails |
+| **Multer**                   | Multipart file handling             |
 
 **Key folders:** `backend/routes/`, `backend/services/`, `backend/models/`, `backend/middleware/`
 
 ### Deployment
 
-| Platform | Role |
-|----------|------|
-| **MongoDB Atlas** | Cloud database |
-| **Firebase** | Google OAuth |
-| **AWS** | S3 storage + SES email |
+| Platform          | Role                   |
+|-------------------|------------------------|
+| **MongoDB Atlas** | Cloud database         |
+| **Firebase**      | Google OAuth           |
+| **AWS**           | S3 storage + SES email |
 
 Local dev: Vite frontend (`5173`) + Express backend (`5002`).
 
@@ -205,20 +205,20 @@ amazon/
 
 ## API Overview
 
-| Route | Description |
-|-------|-------------|
-| `GET /api/health` | Server status, DB mode, user count |
-| `POST /api/auth/register` | Signup |
-| `POST /api/auth/login` | Login |
-| `POST /api/auth/firebase` | Google user sync |
-| `GET /api/auth/me` | Current user profile |
-| `GET /api/dashboard/brief` | Daily brief & overview |
-| `GET /api/notifications` | Alerts list |
-| `GET /api/events` | Events + registrations |
-| `POST /api/ai/chat` | Gemini / CampusGPT chat |
-| `GET /api/ai/status` | Gemini config status |
-| `POST /api/aws/upload` | S3 file upload |
-| `POST /api/aws/email` | SES email send |
+| Route                      | Description                        |
+|----------------------------|-------------                       |
+| `GET /api/health`          | Server status, DB mode, user count |
+| `POST /api/auth/register`  | Signup                             |
+| `POST /api/auth/login`     | Login                              |
+| `POST /api/auth/firebase`  | Google user sync                   |
+| `GET /api/auth/me`         | Current user profile               |
+| `GET /api/dashboard/brief` | Daily brief & overview             |
+| `GET /api/notifications`   | Alerts list                        |
+| `GET /api/events`          | Events + registrations             |
+| `POST /api/ai/chat`        | Gemini / CampusGPT chat            |
+| `GET /api/ai/status`       | Gemini config status               |
+| `POST /api/aws/upload`     | S3 file upload                     |
+| `POST /api/aws/email`      | SES email send                     |
 
 Full API docs: run backend and open `http://localhost:5002/api`
 
@@ -304,36 +304,36 @@ If MongoDB fails, app uses local file fallback (`backend/data/localUsers.json`) 
 
 ## Demo Credentials
 
-| Email | Password | Role |
-|-------|----------|------|
-| `demo@campusflow.edu` | `demo1234` | Student |
+| Email                    | Password   | Role    |
+|--------------------------|------------|---------|
+| `demo@campusflow.edu`    | `demo1234` | Student |
 | `faculty@campusflow.edu` | `demo1234` | Faculty |
-| `admin@campusflow.edu` | `demo1234` | Admin |
+| `admin@campusflow.edu`   | `demo1234` | Admin   |
 
 ---
 
 ## Integrations Summary
 
-| Service | Purpose | Config |
-|---------|---------|--------|
-| **MongoDB Atlas** | User accounts, uploads metadata | `MONGO_URI` |
-| **Firebase** | Google Sign-In + Firestore profiles | `VITE_FIREBASE_*` |
-| **Google Gemini** | AI Assistant chat & summaries | `GEMINI_API_KEY` |
-| **AWS S3** | Resume, profile, document storage | `AWS_*` |
-| **AWS SES** | Registration & welcome emails | `AWS_SES_FROM_EMAIL` |
-| **JWT** | Session tokens for API auth | `JWT_SECRET` |
+| Service            | Purpose                            | Config               |
+|-------------------|-------------------------------------|----------------------|
+| **MongoDB Atlas** | User accounts, uploads metadata     | `MONGO_URI`          |
+| **Firebase**      | Google Sign-In + Firestore profiles | `VITE_FIREBASE_*`    |
+| **Google Gemini** | AI Assistant chat & summaries       | `GEMINI_API_KEY`     |
+| **AWS S3**        | Resume, profile, document storage   | `AWS_*`              |
+| **AWS SES**       | Registration & welcome emails       | `AWS_SES_FROM_EMAIL` |
+| **JWT**           | Session tokens for API auth         | `JWT_SECRET`         |
 
 ---
 
 ## Scripts
 
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start frontend (Vite) |
-| `npm run dev:backend` | Start backend from root |
-| `npm run build` | Production build |
-| `cd backend && npm run dev` | Backend with nodemon |
-| `cd backend && npm start` | Backend production mode |
+| Command                     | Description             |
+|-----------------------------|-------------------------|
+| `npm run dev`               | Start frontend (Vite)   |
+| `npm run dev:backend`       | Start backend from root |
+| `npm run build`             | Production build        |
+| `cd backend && npm run dev` | Backend with nodemon    |
+| `cd backend && npm start`   | Backend production mode |
 
 ---
 
