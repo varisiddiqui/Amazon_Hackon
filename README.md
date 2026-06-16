@@ -284,9 +284,9 @@ cd backend && npm run dev
 npm run dev
 ```
 
-- Frontend: **http://localhost:5173**
-- Backend: **http://localhost:5002**
-- Health check: **http://localhost:5002/api/health**
+- Frontend: **https://amazon-hackon-ten.vercel.app/**
+- Backend: **https://amazon-hackon-7wq0.onrender.com**
+- Health check: **https://amazon-hackon-7wq0.onrender.com/health**
 
 > Vite proxies `/api` → `localhost:5002` automatically.
 
