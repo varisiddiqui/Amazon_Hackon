@@ -71,7 +71,7 @@ Local dev: Vite frontend (`5173`) + Express backend (`5002`).
 ## Features & Modules
 
 ### For Students
-- **Dashboard** — daily brief, overview cards (classes, assignments, attendance, events)
+- **Dashboard** — daily brief, overview cards (classes, assignments, attendance and events)
 - **AI Assistant** — Gemini-powered chat, notice summary, study plan, resume analyzer, voice input
 - **Timetable** — today's classes, weekly schedule, study recommendations
 - **Assignments & Attendance** — due dates, urgency badges, attendance safe-zone advisor
